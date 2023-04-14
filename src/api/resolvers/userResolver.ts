@@ -20,7 +20,7 @@ export default {
     },
   },
   Query: {
-    // create user
+    // users
     users: async () => {
       const response = await fetch(`${process.env.AUTH_URL}/users`);
       if (!response.ok) {
@@ -54,6 +54,86 @@ export default {
       }
       const userFromAuth = await response.json();
       return userFromAuth;
+    },
+  },
+  Mutation: {
+    // createUser
+    register: async (_parent: undefined, args: {user: User}) => {
+      const response = await fetch(`${process.env.AUTH_URL}/users`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(args.user),
+      });
+      if (!response.ok) {
+        throw new GraphQLError('Error registering user');
+      }
+      const user = (await response.json()) as LoginMessageResponse;
+      return user;
+    },
+    login: async (
+      _parent: unknown,
+      args: {credentials: {username: string; password: string}}
+    ) => {
+      const response = await fetch(`${process.env.AUTH_URL}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(args.credentials),
+      });
+      if (!response.ok) {
+        throw new GraphQLError(response.statusText, {
+          extensions: {
+            code: 'NOT_FOUND',
+          },
+        });
+      }
+      const user = (await response.json()) as LoginMessageResponse;
+      return user;
+    },
+    // updateUser
+    updateUser: async (
+      _parent: undefined,
+      args: {user: User},
+      user: UserIdWithToken
+    ) => {
+      const response = await fetch(`${process.env.AUTH_URL}/users/`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${user.token}`,
+        },
+        body: JSON.stringify(args.user),
+      });
+      if (!response.ok) {
+        throw new GraphQLError('Error updating user');
+      }
+      const updatedUser = (await response.json()) as LoginMessageResponse;
+      return updatedUser;
+    },
+    // deleteUser
+    deleteUser: async (
+      _parent: unknown,
+      _args: unknown,
+      user: UserIdWithToken
+    ) => {
+      if (!user.token) {
+        throw new GraphQLError('Error deleting user');
+      }
+      const response = await fetch(`${process.env.AUTH_URL}/users/`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${user.token}`,
+        },
+      });
+      if (!response.ok) {
+        throw new GraphQLError('Error deleting user');
+      }
+      const deletedUser = (await response.json()) as LoginMessageResponse;
+      return deletedUser;
     },
   },
 };

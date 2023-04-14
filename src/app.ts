@@ -50,8 +50,7 @@ app.use(express.json());
     );
 
     const server = new ApolloServer<MyContext>({
-      typeDefs,
-      resolvers,
+      schema,
       introspection: true,
       plugins: [
         process.env.NODE_ENV === 'production'
