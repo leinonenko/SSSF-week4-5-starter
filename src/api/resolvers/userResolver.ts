@@ -44,7 +44,7 @@ export default {
       _args: unknown,
       user: UserIdWithToken
     ) => {
-      const response = await fetch(`${process.env.AUTH_URL}/token`, {
+      const response = await fetch(`${process.env.AUTH_URL}/users/token`, {
         headers: {
           Authorization: `Bearer ${user.token}`,
         },
@@ -134,6 +134,54 @@ export default {
       }
       const deletedUser = (await response.json()) as LoginMessageResponse;
       return deletedUser;
+    },
+    // deleteUser as admin
+    deleteUserAsAdmin: async (
+      _parent: unknown,
+      args: {id: string},
+      user: UserIdWithToken
+    ) => {
+      if (!user.token) {
+        throw new GraphQLError('Error deleting user, unauthorized');
+      }
+      const response = await fetch(`${process.env.AUTH_URL}/users/${args.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${user.token}`,
+        },
+      });
+      if (!response.ok) {
+        throw new GraphQLError('Error deleting user');
+      }
+      const deletedUser = (await response.json()) as LoginMessageResponse;
+      return deletedUser;
+    },
+    // updateUser as admin
+    updateUserAsAdmin: async (
+      _parent: unknown,
+      args: {user: User},
+      user: UserIdWithToken
+    ) => {
+      if (!user.token) {
+        throw new GraphQLError('Error updating user, unauthorized');
+      }
+      const response = await fetch(
+        `${process.env.AUTH_URL}/users/${args.user.id}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${user.token}`,
+          },
+          body: JSON.stringify(args.user),
+        }
+      );
+      if (!response.ok) {
+        throw new GraphQLError('Error updating user');
+      }
+      const updatedUser = (await response.json()) as LoginMessageResponse;
+      return updatedUser;
     },
   },
 };

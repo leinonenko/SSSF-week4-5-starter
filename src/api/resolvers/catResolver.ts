@@ -17,17 +17,28 @@ export default {
       return await catModel.find();
     },
     // catById
-    catById: async (_parent: undefined, args: Cat) => {
+    catById: async (_parent: unknown, args: Cat) => {
       return await catModel.findById(args.id);
     },
     // catsByOwner
-    catsByOwner: async (_parent: undefined, args: Cat) => {
+    catsByOwner: async (_parent: unknown, args: Cat) => {
       return await catModel.find({owner: args.owner});
+    },
+    // catsByLocation
+    catsByArea: async (_parent: unknown, args: locationInput) => {
+      const bounds = rectangleBounds(args.topRight, args.bottomLeft);
+      return await catModel.find({
+        location: {
+          $geoWithin: {
+            $geometry: bounds,
+          },
+        },
+      });
     },
   },
   Mutation: {
     // createCat
-    createCat: async (_parent: undefined, args: Cat, user: UserIdWithToken) => {
+    createCat: async (_parent: unknown, args: Cat, user: UserIdWithToken) => {
       if (!user.id) {
         throw new GraphQLError('Not authorized');
       }
@@ -36,7 +47,7 @@ export default {
       return await cat.save();
     },
     // updateCat
-    updateCat: async (_parent: undefined, args: Cat, user: UserIdWithToken) => {
+    updateCat: async (_parent: unknown, args: Cat, user: UserIdWithToken) => {
       if (!user.id) {
         throw new GraphQLError('Not authorized');
       }
@@ -48,13 +59,39 @@ export default {
       return cat;
     },
     // deleteCat
-    deleteCat: async (_parent: undefined, args: Cat, user: UserIdWithToken) => {
+    deleteCat: async (_parent: unknown, args: Cat, user: UserIdWithToken) => {
       if (!user.id) {
         throw new GraphQLError('Not authorized');
       }
       const cat = await catModel.findOneAndDelete({
         _id: args.id,
         owner: user.id,
+      });
+      return cat;
+    },
+    // deleteCat as admin
+    deleteCatAsAdmin: async (
+      _parent: unknown,
+      args: Cat,
+      user: UserIdWithToken
+    ) => {
+      if (!user.id || user.role !== 'admin') {
+        throw new GraphQLError('Not authorized');
+      }
+      const cat = await catModel.findByIdAndDelete(args.id);
+      return cat;
+    },
+    // updateCat as admin
+    updateCatAsAdmin: async (
+      _parent: unknown,
+      args: Cat,
+      user: UserIdWithToken
+    ) => {
+      if (!user.id || user.role !== 'admin') {
+        throw new GraphQLError('Not authorized');
+      }
+      const cat = await catModel.findByIdAndUpdate(args.id, args, {
+        new: true,
       });
       return cat;
     },
