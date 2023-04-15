@@ -38,9 +38,12 @@ app.use(express.json());
     });
 
     // TODO Create a permissions object
-    const permissions = shield({
-      Mutation: {login: rateLimitRule({window: '1s', max: 5})},
-    });
+    const permissions = shield(
+      {
+        Mutation: {login: rateLimitRule({window: '1s', max: 5})},
+      },
+      {debug: true}
+    );
 
     // TODO Apply the permissions object to the schema
     // remember to change the typeDefs and resolvers to a schema object
