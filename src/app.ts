@@ -34,7 +34,7 @@ app.use(express.json());
   try {
     // TODO Create a rate limit rule instance
     const rateLimitRule = createRateLimitRule({
-      identifyContext: (ctx) => ctx.req.ip,
+      identifyContext: (ctx) => ctx.id,
     });
 
     // TODO Create a permissions object
